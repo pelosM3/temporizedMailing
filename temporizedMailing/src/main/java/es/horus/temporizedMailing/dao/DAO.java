@@ -3,10 +3,12 @@ package es.horus.temporizedMailing.dao;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,45 +26,68 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public abstract class DAO {
+public abstract class DAO<T> {
 	protected String TAG;
+	protected List<String> FIELDS;
+	private Class<? extends T> clazz;
+	
 	private File file;
 	private Document db;
-	private Class clazz;
-	protected List<String> FIELDS;
 	
-	public DAO(Class clazz, Path path) throws ParserConfigurationException, SAXException, IOException {
+	private Set<T> rows;
+	
+	public DAO(Class<? extends T> clazz, Path path) throws ParserConfigurationException, SAXException, IOException {
 		this.clazz = clazz;
 		file = path.toFile();
+		file.createNewFile();
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		db = dBuilder.parse(file);
+		try {
+			db = dBuilder.parse(file);
+		} catch (Exception e) {
+			// El fichero no tiene un formato XML valido: lo ignoramos y creamos uno nuevo
+		}
+		if (db == null) {
+			db = dBuilder.newDocument();
+			db.appendChild(db.createElement("datos"));
+			
+		}
 		db.getDocumentElement().normalize();
 	}
 	
-	public Set getRows() throws InstantiationException, IllegalAccessException {
-		Set rows = new HashSet<>();
-		NodeList list = db.getElementsByTagName(TAG);
-		for (int row = 0; row < list.getLength(); row++) {
-			Node node = list.item(row);
-			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				Element element = (Element) node;
-				Object o = clazz.newInstance();
-				for (String s : FIELDS) {
-					try {
-						Field field = clazz.getDeclaredField(s);
-						field.setAccessible(true);
-						field.set(o, element.getElementsByTagName(field.getName()).item(0).getTextContent());
-					} catch (Exception e) {
-						e.printStackTrace();
+	public Set<T> getRows() throws InstantiationException, IllegalAccessException {
+		if (rows == null) {
+			rows = new HashSet<>();
+			NodeList list = db.getElementsByTagName(TAG);
+			for (int row = 0; row < list.getLength(); row++) {
+				Node node = list.item(row);
+				if (node.getNodeType() == Node.ELEMENT_NODE) {
+					Element element = (Element) node;
+					T o = clazz.newInstance();
+					for (String s : FIELDS) {
+						try {
+							Field field = clazz.getDeclaredField(s);
+							field.setAccessible(true);
+							String value = element.getElementsByTagName(field.getName()).item(0).getTextContent();
+							if(field.getType().isAssignableFrom(UUID.class)) {
+								field.set(o, UUID.fromString(value));
+							} else {
+								field.set(o, value);
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
+					rows.add(o);
 				}
-				rows.add(o);
-			}
+			} 
 		}
 		return rows;
 	}
-	public boolean insertRow(Object o) throws NoSuchFieldException, SecurityException {
+	public boolean insertRow(T o) throws NoSuchFieldException, FileAlreadyExistsException, InstantiationException, IllegalAccessException {
+		if(rows.contains(o)) {
+			throw new FileAlreadyExistsException(null);
+		}
 		Node parentNode = db.createElement(TAG);
 		for (String s : FIELDS) {
 			Field field = clazz.getDeclaredField(s);
@@ -75,16 +100,20 @@ public abstract class DAO {
 				e.printStackTrace();
 			}
 		}
-		if(parentNode.getChildNodes().getLength() != FIELDS.size()) return false;
+		if(parentNode.getChildNodes().getLength() != FIELDS.size()) {
+			return false;
+		}
 		db.getDocumentElement().appendChild(parentNode);
 		try {
 			writeToFile();
 		} catch (TransformerException e) {
-			System.err.printf("No se pudo guardar el contacto en el fichero : %s.\n",file.getAbsolutePath());
+			e.printStackTrace();
 			return false;
 		}
+		rows.add(o);
 		return true;
 	}
+	
 	private  void writeToFile() throws TransformerException {
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -93,6 +122,4 @@ public abstract class DAO {
         StreamResult result = new StreamResult(file.getPath());
         transformer.transform(source, result);
 	}
-
-	public abstract Object getRow();
 }

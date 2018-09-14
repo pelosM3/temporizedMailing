@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.annotations.Theme;
@@ -12,8 +13,15 @@ import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.data.util.converter.Converter;
 import com.vaadin.data.util.converter.DefaultConverterFactory;
 import com.vaadin.data.util.converter.StringToIntegerConverter;
+import com.vaadin.server.CustomizedSystemMessages;
+import com.vaadin.server.DefaultErrorHandler;
+import com.vaadin.server.SystemMessages;
+import com.vaadin.server.SystemMessagesInfo;
+import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -64,34 +72,55 @@ public class MyUI extends UI {
 		});
 		
 		// Configuracion de mensajes
-//		getReconnectDialogConfiguration().setDialogText(getString("mensaje.error.servidor.conexion"));
-//		errorHandler = new DefaultErrorHandler() {
-//			@Override
-//			public void error(com.vaadin.server.ErrorEvent event) {
-//				log.error("Error interno: ", event.getThrowable());
-//				Notification.show(getString("mensaje.error.generico"), Type.ERROR_MESSAGE);
-//				//TODO enviar email
-//			}
-//		};
-//		setErrorHandler(errorHandler);
-//		getSession().setErrorHandler(errorHandler);
+		getReconnectDialogConfiguration().setDialogText("Perdida conexión con el servidor, intentando reconectar...");
+		DefaultErrorHandler errorHandler = new DefaultErrorHandler() {
+			@Override
+			public void error(com.vaadin.server.ErrorEvent event) {
+				event.getThrowable().printStackTrace();
+				Notification.show("Ha ocurrido un error", Type.ERROR_MESSAGE);
+			}
+		};
+		setErrorHandler(errorHandler);
+		getSession().setErrorHandler(errorHandler);
 		
 		// Titulo
 		getPage().setTitle("Programación de e-mails");
 
 		final VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
-//		String pro = CanalContenedor.getInstance().getValor(CanalContenedor.ENTORNO);
-//		if(!es.horus.g2common.utils.Constants.ENTORNO_PRO.equals(pro)){
-//			layout.setStyleName(UIConstants.BROWNLIGHT);
-//		}
 		setContent(layout);
 		principalCtl = new PrincipalCtl();
 		principalCtl.showView(layout);
     }
 
     @WebServlet(urlPatterns = "/*", name = "MyUIServlet", asyncSupported = true)
-    @VaadinServletConfiguration(ui = MyUI.class, productionMode = false)
+    @VaadinServletConfiguration(ui = MyUI.class, productionMode = true)
     public static class MyUIServlet extends VaadinServlet {
+    	@Override
+    	protected void servletInitialized() throws ServletException {
+    		// Iniciamos mensajes
+			getService().setSystemMessagesProvider(new SystemMessagesProvider() {
+				@Override
+				public SystemMessages getSystemMessages(SystemMessagesInfo systemMessagesInfo) {
+					CustomizedSystemMessages messages = new CustomizedSystemMessages();
+					messages.setSessionExpiredCaption("Tome nota de los datos que necesite y haga click aquí o pulse ESC para continuar.");
+					messages.setSessionExpiredMessage("Sesión expirada");
+					
+					messages.setInternalErrorCaption("Ha ocurrido un error");
+					messages.setInternalErrorMessage("Ha ocurrido un error interno en la aplicacion.");
+					
+					messages.setCommunicationErrorCaption("Ha ocurrido un error");
+					messages.setCommunicationErrorMessage("Perdida conexión con el servidor, intentando reconectar...");
+					
+					messages.setAuthenticationErrorCaption("Ha ocurrido un error");
+					messages.setAuthenticationErrorMessage("Acceso denegado.");
+					
+					messages.setCookiesDisabledCaption("Ha ocurrido un error");
+					messages.setCookiesDisabledMessage("Cookies desactivadas");
+			        return messages;
+				}
+			});
+    		
+    	}
     }
 }

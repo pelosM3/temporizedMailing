@@ -25,13 +25,16 @@ public class Programacion {
 
 	private Timer timer;
 	private UUID uuid;
-	private CUANDO cuando;
+	private String cuando;
+	
+	public Programacion() {
+	}
 	
 	public Programacion(Timer timer, UUID uuid, CUANDO cuando) {
 		super();
 		this.timer = timer;
 		this.uuid = uuid;
-		this.cuando = cuando;
+		this.cuando = cuando.toString();
 	}
 	public Timer getTimer() {
 		return timer;
@@ -45,10 +48,10 @@ public class Programacion {
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
-	public CUANDO getCuando() {
+	public String getCuando() {
 		return cuando;
 	}
 	public void setCuando(CUANDO cuando) {
-		this.cuando = cuando;
+		this.cuando = cuando.toString();
 	}
 }

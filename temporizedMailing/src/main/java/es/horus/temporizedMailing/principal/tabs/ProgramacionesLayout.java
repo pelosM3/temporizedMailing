@@ -14,18 +14,17 @@ public class ProgramacionesLayout extends GenericTabLayout {
 
 	public ProgramacionesLayout(PrincipalCtl ctl) {
 		super(ctl);
-		// TODO Auto-generated constructor stub
 	}
 
 	protected void buildLayout() {
 		VerticalLayout v = new VerticalLayout();
 		
 		Table programaciones = new Table();
-		programaciones.setContainerDataSource(new BeanItemContainer(Programacion.class, ctl.getProgramaciones()));
+		programaciones.setContainerDataSource(new BeanItemContainer<Programacion>(Programacion.class, ctl.getProgramaciones()));
 		programaciones.containerItemSetChange(new ItemSetChangeEvent() {
 			@Override
 			public Container getContainer() {
-				return new BeanItemContainer(Programacion.class, ctl.getProgramaciones());
+				return new BeanItemContainer<Programacion>(Programacion.class, ctl.getProgramaciones());
 			}
 		});
 		programaciones.setVisibleColumns(new Object[] { "uuid","cuando" });

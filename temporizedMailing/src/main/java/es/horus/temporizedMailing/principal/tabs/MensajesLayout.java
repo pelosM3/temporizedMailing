@@ -12,8 +12,10 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
@@ -40,17 +42,13 @@ public class MensajesLayout extends GenericTabLayout {
 	@Override
 	protected void buildLayout() {
 		HorizontalLayout h = new HorizontalLayout();
-		final TextField direccion;
-		Button addAddress, send;
-		TextField asunto;
-		RichTextArea cuerpo;
 		
-		direccion = new TextField("Dirección");
+		final TextField direccion = new TextField("Dirección");
 		direccion.setReadOnly(true);
 		direccion.setRequired(true);
 		direccion.setColumns(60);
-		asunto = new TextField("Asunto");
-		addAddress = new Button("+");
+		TextField asunto = new TextField("Asunto");
+		Button addAddress = new Button("+");
 		addAddress.addClickListener(new ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
@@ -78,11 +76,19 @@ public class MensajesLayout extends GenericTabLayout {
 		h.setSpacing(true);
 		h.setWidth("100%");
 		
-		cuerpo = new RichTextArea("Cuerpo del mensaje");
+		RichTextArea cuerpo = new RichTextArea("Cuerpo del mensaje");
 		cuerpo.setId("cuerpo");
 		cuerpo.setImmediate(true);
 		cuerpo.setRequired(true);
 		cuerpo.setSizeFull();
+		
+		CssLayout container = new CssLayout(cuerpo) {
+			@Override
+			protected String getCss(Component c) {
+				return "resize: vertical; overflow: auto;";
+			}
+		};
+		container.setSizeFull();
 		
 		HorizontalLayout programaciones = new HorizontalLayout();
 		OptionGroup when = new OptionGroup("Cuándo",Arrays.asList(Programacion.CUANDO.values()));
@@ -101,10 +107,13 @@ public class MensajesLayout extends GenericTabLayout {
 		programaciones.addComponent(when);
 		programaciones.addComponent(cal);
 		
-		send = new Button("Programar envío");
+		Button send = new Button("Programar envío");
 		send.addClickListener(new ClickListener() {
 			@Override
-			public void buttonClick(ClickEvent event) {		        
+			public void buttonClick(ClickEvent event) {
+				if(!isValid()) {
+					return;
+				}
 		        SendEmailUtility task = new SendEmailUtility(direccion.getValue(), asunto.getValue(),cuerpo.getValue(), null,null);
 		        Timer timer = new Timer();
 		        Programacion programacion;
@@ -143,9 +152,10 @@ public class MensajesLayout extends GenericTabLayout {
 	        	Notification.show(caption,message,Notification.Type.TRAY_NOTIFICATION);
 			}
 		});
+		addRequiredFields(direccion, cuerpo);
 
 		addComponent(h);
-		addComponent(cuerpo);
+		addComponent(container);
 		addComponent(programaciones);
 		addComponent(send);
 		setComponentAlignment(send, Alignment.MIDDLE_CENTER);

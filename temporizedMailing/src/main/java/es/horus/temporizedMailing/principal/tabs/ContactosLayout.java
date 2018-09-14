@@ -1,11 +1,15 @@
 package es.horus.temporizedMailing.principal.tabs;
 
+import java.nio.file.FileAlreadyExistsException;
+
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -29,6 +33,7 @@ public class ContactosLayout extends GenericTabLayout {
 		TextField ape1 = new TextField("Primer apellido");
 		TextField ape2 = new TextField("Segundo apellido");
 		TextField email = new TextField("Email");
+		addRequiredFields(nombre,ape1,email);
 		nombre.setRequired(true);
 		ape1.setRequired(true);
 		email.setRequired(true);
@@ -41,7 +46,8 @@ public class ContactosLayout extends GenericTabLayout {
 
 		
 		Table contactos = new Table();
-		contactos.setContainerDataSource(new BeanItemContainer(Contacto.class, ctl.getContactos()));
+		contactos.setWidth("100%");
+		contactos.setContainerDataSource(new BeanItemContainer<Contacto>(Contacto.class, ctl.getContactos()));
 		contactos.setVisibleColumns(new Object[] { "nombre", "ape1", "ape2","email" });
 		contactos.setColumnHeaders(new String[] { "Nombre", "Primer apellido", "Segundo apellido","Email" });
 		
@@ -49,15 +55,22 @@ public class ContactosLayout extends GenericTabLayout {
 		guardar.addClickListener(new ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
+				if(!isValid()) {
+					return;
+				}
+				
 				Contacto c = new Contacto(nombre.getValue(),ape1.getValue(),ape2.getValue(),email.getValue());
 				ContactoEvent ce = new ContactoEvent(PrincipalCtl.ADD_CONTACT_EVENT,c);
 				try {
-					ctl.doEvent(ce);
-					contactos.addItem(c);
-					nombre.clear();
-					ape1.clear();
-					ape2.clear();
-					email.clear();
+					if (ctl.doEvent(ce)) {
+						contactos.addItem(c);
+						nombre.clear();
+						ape1.clear();
+						ape2.clear();
+						email.clear();
+					}
+				} catch (FileAlreadyExistsException e) {
+					Notification.show("El contacto con email "+email.getValue()+" ya existe en la base de datos.", Type.ERROR_MESSAGE);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -75,5 +88,4 @@ public class ContactosLayout extends GenericTabLayout {
 		
 		addComponent(v);
 	}
-
 }

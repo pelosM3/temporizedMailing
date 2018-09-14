@@ -10,16 +10,20 @@ import org.xml.sax.SAXException;
 
 import es.horus.temporizedMailing.beans.Programacion;
 
-public class ProgramacionDAO extends DAO{
+public class ProgramacionDAO extends DAO<Programacion>{
 
-	public ProgramacionDAO() throws ParserConfigurationException, SAXException, IOException {
+	private static ProgramacionDAO instance;
+
+	private ProgramacionDAO() throws ParserConfigurationException, SAXException, IOException {
 		super(Programacion.class,Paths.get(System.getProperty("user.home"),"programaciones.xml"));
 		this.TAG = "programacion";
 		this.FIELDS = Arrays.asList("uuid","cuando");
-	}	
-	@Override
-	public Object getRow() {
-		// TODO Auto-generated method stub
-		return null;
+	}
+	
+	public static ProgramacionDAO get() throws ParserConfigurationException, SAXException, IOException {
+		if(instance == null) {
+			instance = new ProgramacionDAO();
+		}
+		return instance;
 	}
 }

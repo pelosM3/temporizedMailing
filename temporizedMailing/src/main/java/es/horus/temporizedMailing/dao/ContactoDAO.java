@@ -10,17 +10,20 @@ import org.xml.sax.SAXException;
 
 import es.horus.temporizedMailing.beans.Contacto;
 
-public class ContactoDAO extends DAO{
+public class ContactoDAO extends DAO<Contacto> {
 	
-	public ContactoDAO() throws ParserConfigurationException, SAXException, IOException {
+	private static ContactoDAO instance;
+	
+	private ContactoDAO() throws ParserConfigurationException, SAXException, IOException {
 		super(Contacto.class,Paths.get(System.getProperty("user.home"),"contactos.xml"));
 		this.TAG = "contacto";
 		this.FIELDS = Arrays.asList("nombre","ape1","ape2","email");
 	}
-
-	@Override
-	public Object getRow() {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public static ContactoDAO get() throws ParserConfigurationException, SAXException, IOException {
+		if(instance == null) {
+			instance = new ContactoDAO();
+		}
+		return instance;
 	}
 }
