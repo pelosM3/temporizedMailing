@@ -1,72 +1,47 @@
 package es.horus.temporizedMailing.principal.tabs;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Timer;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.PopupDateField;
 import com.vaadin.ui.RichTextArea;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.Window.CloseEvent;
-import com.vaadin.ui.Window.CloseListener;
 
-import es.horus.temporizedMailing.beans.Programacion;
+import es.horus.temporizedMailing.beans.AvisoBE;
+import es.horus.temporizedMailing.beans.ProgramacionBE;
 import es.horus.temporizedMailing.events.ProgramacionEvent;
 import es.horus.temporizedMailing.principal.PrincipalCtl;
-import es.horus.temporizedMailing.principal.SeleccionaDireccionesWindow;
-import es.horus.temporizedMailing.utilities.SendEmailUtility;
+import es.horus.temporizedMailing.utilities.Utiles;
 
 public class MensajesLayout extends GenericTabLayout {
 	
-	private Programacion.CUANDO cuando;
-	
+	private AvisoBE miAvisoNuevo=null;
+		
 	public MensajesLayout(PrincipalCtl ctl) {
 		super(ctl);
 	}
 
 	@Override
 	protected void buildLayout() {
+		miAvisoNuevo=new AvisoBE();
 		HorizontalLayout h = new HorizontalLayout();
 		
-		final TextField direccion = new TextField("Dirección");
-		direccion.setReadOnly(true);
-		direccion.setRequired(true);
-		direccion.setColumns(60);
-		TextField asunto = new TextField("Asunto");
-		Button addAddress = new Button("+");
-		addAddress.addClickListener(new ClickListener() {
-			@Override
-			public void buttonClick(ClickEvent event) {
-				SeleccionaDireccionesWindow pickAddresses = new SeleccionaDireccionesWindow(ctl.getContactos(),ctl.getContactosSeleccionados());
-				pickAddresses.addCloseListener(new CloseListener() {
-					@Override
-					public void windowClose(CloseEvent e) {
-						direccion.setReadOnly(false);
-						direccion.setValue(pickAddresses.getContactosSeleccionadosEmail());
-						direccion.setReadOnly(true);
-					}
-				});
-				getUI().addWindow(pickAddresses);
-			}
-		});
+		TextField asunto = new TextField("Asunto:");
+		TextField addAddress = new TextField("Para:");
+		addAddress.setColumns(60);
 		
 		HorizontalLayout direccionesLayout = new HorizontalLayout();
-		direccionesLayout.addComponent(direccion);
 		direccionesLayout.addComponent(addAddress);
 		direccionesLayout.setComponentAlignment(addAddress, Alignment.BOTTOM_CENTER);
 		h.addComponent(asunto);
@@ -91,21 +66,34 @@ public class MensajesLayout extends GenericTabLayout {
 		container.setSizeFull();
 		
 		HorizontalLayout programaciones = new HorizontalLayout();
-		OptionGroup when = new OptionGroup("Cuándo",Arrays.asList(Programacion.CUANDO.values()));
+		OptionGroup when = new OptionGroup("Cuándo");
+		when.addItem("Unico");
+		when.addItem("Semanal");
+		when.addItem("Quincenal");
+		when.addItem("Mensual");
+		when.addItem("Anual");
+		
 		when.addValueChangeListener(new ValueChangeListener() {
 			@Override
 			public void valueChange(ValueChangeEvent e) {
-				cuando = (Programacion.CUANDO) e.getProperty().getValue();
+				// capturar el tipo, generar calendarios y marcar los dias en funcion del tipo, incluso si pinchan en el calendario cualquier dia añadir ese dia tb para enviar
 			}
 		});
-		when.setValue(Programacion.CUANDO.UNA_VEZ);
+		//preseleccionado el que sea
+		
 		when.setImmediate(true);
 		
-		PopupDateField cal = new PopupDateField("Fechas de envío del mensaje.",new Date());
+		PopupDateField cal = new PopupDateField("Fecha para el primer envío:",new Date());
 		cal.setTextFieldEnabled(false);
-		cal.setResolution(Resolution.SECOND);
+		cal.setResolution(Resolution.DAY);
+
+		PopupDateField fin = new PopupDateField("Fechas fin",Utiles.getFechaActualMasDias(90));
+		fin.setTextFieldEnabled(false);
+		fin.setResolution(Resolution.DAY);
+		
 		programaciones.addComponent(when);
 		programaciones.addComponent(cal);
+		programaciones.addComponent(fin);
 		
 		Button send = new Button("Programar envío");
 		send.addClickListener(new ClickListener() {
@@ -114,45 +102,37 @@ public class MensajesLayout extends GenericTabLayout {
 				if(!isValid()) {
 					return;
 				}
-		        SendEmailUtility task = new SendEmailUtility(direccion.getValue(), asunto.getValue(),cuerpo.getValue(), null,null);
-		        Timer timer = new Timer();
-		        Programacion programacion;
+
 				Date firstTime = cal.getValue();
 				SimpleDateFormat simpleDateformat;
-				String caption = "Nueva programación";
-				String message = "";
-		        switch(cuando) {
-			        case UNA_VEZ:
-			        	timer.schedule(task, firstTime);
-			        	Notification.show("Mensaje programado para: "+firstTime.toString());
-			        	break;
-					case ANUALMENTE:
-			        	timer.schedule(task, firstTime, TimeUnit.DAYS.toMillis(365));
-						break;
-					case MENSUALMENTE:
-			        	timer.schedule(task, firstTime, TimeUnit.DAYS.toMillis(30));
-						break;
-					case PERSONALIZADO:
-						break;
-					case SEMANALMENTE:
-			        	timer.schedule(task, firstTime, TimeUnit.DAYS.toMillis(7));
-			        	simpleDateformat = new SimpleDateFormat("EEEE");
-			        	message = "Mensaje programado para todos los: "+simpleDateformat.format(firstTime);
-						break;
-					default:
-			        	task.run();
-						break;
-		        }
-		        programacion = new Programacion(timer, UUID.nameUUIDFromBytes(new Date().toString().getBytes()),cuando);
+
+				if(miAvisoNuevo==null) {
+					//no me preguntes como pero da null ?¿?¿
+					
+					miAvisoNuevo=new AvisoBE();
+				}
+
+				miAvisoNuevo.setDestinatario(addAddress.getValue());
+				miAvisoNuevo.setAsunto(asunto.getValue());
+				miAvisoNuevo.setMensaje(cuerpo.getValue());
+				miAvisoNuevo.setFechaCreacion(Utiles.getFechaAsLong(cal.getValue()));
+
+				//esto habra que ir guardandolo al generar los calendarios no aqui, pero por probar....
+				miAvisoNuevo.addProgramacion(new ProgramacionBE(20190131L));
+				miAvisoNuevo.addProgramacion(new ProgramacionBE(20190831L));
+				miAvisoNuevo.addProgramacion(new ProgramacionBE(20200131L));
+				
+				
+				
 		        try {
-					ctl.doEvent(new ProgramacionEvent(PrincipalCtl.ADD_TIMER_EVENT,programacion));
+					ctl.doEvent(new ProgramacionEvent(PrincipalCtl.ADD_TIMER_EVENT,miAvisoNuevo));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-	        	Notification.show(caption,message,Notification.Type.TRAY_NOTIFICATION);
+	        	//Notification.show(caption,message,Notification.Type.TRAY_NOTIFICATION);
 			}
 		});
-		addRequiredFields(direccion, cuerpo);
+		addRequiredFields(asunto,addAddress, cuerpo);
 
 		addComponent(h);
 		addComponent(container);

@@ -1,20 +1,20 @@
 package es.horus.temporizedMailing.events;
 
-import es.horus.temporizedMailing.beans.Programacion;
+import es.horus.temporizedMailing.beans.AvisoBE;
 
 public class ProgramacionEvent extends PrincipalEvent {
-	private Programacion programacion;
+	private AvisoBE programacion;
 
-	public ProgramacionEvent(Integer id, Programacion programacion) {
+	public ProgramacionEvent(Integer id, AvisoBE programacion) {
 		super(id);
 		this.programacion = programacion;
 	}
 
-	public Programacion getProgramacion() {
+	public AvisoBE getProgramacion() {
 		return programacion;
 	}
 
-	public void setProgramacion(Programacion programacion) {
+	public void setProgramacion(AvisoBE programacion) {
 		this.programacion = programacion;
 	}
 

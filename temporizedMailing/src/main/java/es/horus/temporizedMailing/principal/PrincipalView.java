@@ -6,7 +6,6 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import es.horus.temporizedMailing.principal.tabs.ContactosLayout;
 import es.horus.temporizedMailing.principal.tabs.MensajesLayout;
 import es.horus.temporizedMailing.principal.tabs.ProgramacionesLayout;
 
@@ -32,7 +31,7 @@ public class PrincipalView {
 
 		TabSheet ts = new TabSheet();
 		addTab(ts,"Enviar mensaje",new MensajesLayout(ctl));
-		addTab(ts,"Contactos",new ContactosLayout(ctl));
+		//addTab(ts,"Contactos",new ContactosLayout(ctl));
 		addTab(ts,"Programaciones",new ProgramacionesLayout(ctl));
 		ventana.setContent(ts);
 				

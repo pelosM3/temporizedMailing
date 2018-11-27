@@ -7,7 +7,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
-import es.horus.temporizedMailing.beans.Programacion;
+import es.horus.temporizedMailing.beans.AvisoBE;
 import es.horus.temporizedMailing.principal.PrincipalCtl;
 
 public class ProgramacionesLayout extends GenericTabLayout {
@@ -20,15 +20,15 @@ public class ProgramacionesLayout extends GenericTabLayout {
 		VerticalLayout v = new VerticalLayout();
 		
 		Table programaciones = new Table();
-		programaciones.setContainerDataSource(new BeanItemContainer<Programacion>(Programacion.class, ctl.getProgramaciones()));
+		programaciones.setContainerDataSource(new BeanItemContainer<AvisoBE>(AvisoBE.class, ctl.getProgramaciones()));
 		programaciones.containerItemSetChange(new ItemSetChangeEvent() {
 			@Override
 			public Container getContainer() {
-				return new BeanItemContainer<Programacion>(Programacion.class, ctl.getProgramaciones());
+				return new BeanItemContainer<AvisoBE>(AvisoBE.class, ctl.getProgramaciones());
 			}
 		});
-		programaciones.setVisibleColumns(new Object[] { "uuid","cuando" });
-		programaciones.setColumnHeaders(new String[] { "UUID", "Cuando" });
+		programaciones.setVisibleColumns(new Object[] { "destinatario","asunto" });
+		programaciones.setColumnHeaders(new String[] { "Para", "Asunto" });
 		
 		v.addComponent(programaciones);
 		v.setComponentAlignment(programaciones,Alignment.MIDDLE_CENTER);
