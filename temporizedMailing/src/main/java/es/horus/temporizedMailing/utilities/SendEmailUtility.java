@@ -21,23 +21,23 @@ import javax.mail.internet.MimeMultipart;
 
 import es.horus.temporizedMailing.MyUI;
 
-public class SendEmailUtility extends TimerTask {
+public class SendEmailUtility {
 
 	private final static String PROPS_PATH = "/mail.properties";
 	private String toEmail,subject,body;
-	private List<InputStream> attachtments;
-	private List<String> fileNames;
+	/*private List<InputStream> attachtments;
+	private List<String> fileNames;*/
 	
-	public SendEmailUtility(String toEmail, String subject, String body, List<InputStream> attachtments, List<String> fileNames) {
-		super();
+	public SendEmailUtility(String toEmail, String subject, String body/*, List<InputStream> attachtments, List<String> fileNames*/) {
 		this.toEmail = toEmail;
 		this.subject = subject;
 		this.body = body;
-		this.attachtments = attachtments == null ? new ArrayList<>() : attachtments;
-		this.fileNames = fileNames == null ? new ArrayList<>() : fileNames;
+		//this.attachtments = attachtments == null ? new ArrayList<>() : attachtments;
+		//this.fileNames = fileNames == null ? new ArrayList<>() : fileNames;
 	}
 	
-    private void sendEmail(){   
+    public boolean sendEmail(){   
+    	boolean ret=false;
     	Properties props = new Properties();
     	try {
 			props.load(MyUI.class.getResourceAsStream(PROPS_PATH));
@@ -65,10 +65,13 @@ public class SendEmailUtility extends TimerTask {
 			message.setContent(createMessageContent());
 			
 			Transport.send(message);
+			ret=true;
 
 		} catch (MessagingException | IOException e) {
-			throw new RuntimeException(e);
+			System.err.println(e);
+			ret=false;
 		}   
+		return ret;
     }
     
     private MimeMultipart createMessageContent() throws MessagingException, IOException {
@@ -89,17 +92,5 @@ public class SendEmailUtility extends TimerTask {
 		
 		return multipart;
     }
-    
-//    private String getMimeType(String fileName) throws IOException {
-//    	URL url = new URL("http://www.iana.org/assignments/media-types/application.csv");
-//    	Scanner scanner = new Scanner(url.openStream());
-//    	String line = scanner.next(FilenameUtils.getExtension(fileName));
-//    	
-//    	return line.split(",")[1];
-//    }
 
-	@Override
-	public void run() {
-		sendEmail();
-	}
 }

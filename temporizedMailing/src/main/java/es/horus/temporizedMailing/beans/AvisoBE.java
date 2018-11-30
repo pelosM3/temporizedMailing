@@ -1,8 +1,5 @@
 package es.horus.temporizedMailing.beans;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -15,10 +12,8 @@ public class AvisoBE {
 	private Long fechaCreacion;
 	
 	private ProgramacionBE[] programaciones;
-	private List<ProgramacionBE> programacionesList;
 	
 	public AvisoBE() {
-		programacionesList=new ArrayList<ProgramacionBE>();
 	}
 	
 	public String getAsunto() {
@@ -51,9 +46,14 @@ public class AvisoBE {
 	}
 	
 	public void addProgramacion(ProgramacionBE p) {
-		programacionesList.add(p);
-		
-		programaciones=programacionesList.toArray(new ProgramacionBE[programacionesList.size()]);
+		ProgramacionBE[] progMasTam=new ProgramacionBE[programaciones.length+1];
+		int i=0;
+		for(ProgramacionBE t:programaciones) {
+			progMasTam[i]=t;					
+			i++;
+		}
+		progMasTam[i]=p;		
+		programaciones=progMasTam;
 	}
 
 	public ProgramacionBE[] getProgramaciones() {
@@ -64,11 +64,15 @@ public class AvisoBE {
 		this.programaciones = programaciones;
 	}
 
+	@Override
+	public String toString(){
+		return fechaCreacion+" "+destinatario+" "+asunto;
+	}
 	////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////
 	public boolean hayPendientes() {
 		
-		for(ProgramacionBE p:programacionesList) {
+		for(ProgramacionBE p:programaciones) {
 			if(p.getEnviado()==ProgramacionBE.ESTADO_PENDIENTE) {
 				return true;
 			}
@@ -94,7 +98,7 @@ public class AvisoBE {
 		String ret="programacion";
 		
 		if(asunto!=null && destinatario!=null) {
-			String tmp=(destinatario+asunto).replaceAll("[^a-zA-Z]", "");
+			String tmp=(fechaCreacion+destinatario+asunto).replaceAll("[^0-9a-zA-Z]", "");
 			
 			if(tmp.length()>0) {
 				ret=tmp;

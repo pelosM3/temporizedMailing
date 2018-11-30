@@ -1,9 +1,12 @@
 package es.horus.temporizedMailing;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -26,6 +29,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import es.horus.temporizedMailing.principal.PrincipalCtl;
+import es.horus.temporizedMailing.utilities.AvisosManager;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window 
@@ -91,6 +95,8 @@ public class MyUI extends UI {
 		setContent(layout);
 		principalCtl = new PrincipalCtl();
 		principalCtl.showView(layout);
+		
+
     }
 
     @WebServlet(urlPatterns = "/*", name = "MyUIServlet", asyncSupported = true)
@@ -120,6 +126,12 @@ public class MyUI extends UI {
 			        return messages;
 				}
 			});
+			
+
+			AvisosManager avisoMgHilo=new AvisosManager();
+			Timer timer = new Timer();
+			 
+			timer.schedule(avisoMgHilo, new Date(),TimeUnit.HOURS.toMillis(1));//hardcodeado cada hora, meter a properties un rato
     		
     	}
     }

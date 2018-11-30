@@ -29,6 +29,7 @@ public class AvisosDAO {
 			}else {
 				//todo ok, la bbdd existe
 				existe=true;
+				verificaNombresFicheros();
 				System.out.println("BBDD OK");
 			}
 		}else{
@@ -36,6 +37,24 @@ public class AvisosDAO {
 				System.out.println("BBDD creada. vacia");
 			}else {
 				System.out.println("Error al crear bbdd");
+			}
+		}
+	}
+	private void verificaNombresFicheros() {//si alguien le cambia el nombre a un fichero se generarian duplicados continuamente, hay que renombrar todo al arrancar
+		if(existe) {
+			File[] l=dirBBDD.listFiles();
+			
+			for(File f:l) {
+				String fileName=f.getAbsolutePath();
+				if(fileName.endsWith(".dat")) {//los historicos se rescatan cambiandoles la extension, aqui se descartan solo se cargan los activos
+					AvisoBE v=lee(f.getAbsolutePath());
+					
+					if(!fileName.endsWith(v.getFileFullName())){
+						String nombreDestino=DIRBASE+"/"+v.getFileFullName();
+						System.out.println("Reparamos nombre de fichero FICHERO de "+fileName+" a "+nombreDestino);
+						f.renameTo(new File(nombreDestino));
+					}
+				}
 			}
 		}
 	}
