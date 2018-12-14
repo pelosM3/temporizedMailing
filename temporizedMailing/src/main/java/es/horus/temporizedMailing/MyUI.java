@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
+import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.util.converter.Converter;
 import com.vaadin.data.util.converter.DefaultConverterFactory;
 import com.vaadin.data.util.converter.StringToIntegerConverter;
@@ -39,6 +40,7 @@ import es.horus.temporizedMailing.utilities.AvisosManager;
  * overridden to add component to the user interface and initialize non-component functionality.
  */
 @Theme("mytheme")
+@Widgetset("MyWidgetset")
 public class MyUI extends UI {
 
 	private static final String DEFAULT_LANG = "es";

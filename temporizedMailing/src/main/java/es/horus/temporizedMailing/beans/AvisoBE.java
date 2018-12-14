@@ -46,14 +46,18 @@ public class AvisoBE {
 	}
 	
 	public void addProgramacion(ProgramacionBE p) {
-		ProgramacionBE[] progMasTam=new ProgramacionBE[programaciones.length+1];
-		int i=0;
-		for(ProgramacionBE t:programaciones) {
-			progMasTam[i]=t;					
-			i++;
+		if (programaciones != null) {
+			ProgramacionBE[] progMasTam = new ProgramacionBE[programaciones.length + 1];
+			int i = 0;
+			for (ProgramacionBE t : programaciones) {
+				progMasTam[i] = t;
+				i++;
+			}
+			progMasTam[i] = p;
+			programaciones = progMasTam;
+		} else {
+			programaciones = new ProgramacionBE[]{p};
 		}
-		progMasTam[i]=p;		
-		programaciones=progMasTam;
 	}
 
 	public ProgramacionBE[] getProgramaciones() {

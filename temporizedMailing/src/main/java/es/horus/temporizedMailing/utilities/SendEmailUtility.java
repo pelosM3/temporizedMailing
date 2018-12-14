@@ -14,10 +14,12 @@ import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.HeaderTokenizer;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import es.horus.temporizedMailing.MyUI;
 
@@ -77,7 +79,8 @@ public class SendEmailUtility {
     private MimeMultipart createMessageContent() throws MessagingException, IOException {
 		MimeMultipart multipart = new MimeMultipart();
 		BodyPart messageBodyPart = new MimeBodyPart();
-		messageBodyPart.setContent(body, "text/html");
+		messageBodyPart.setContent(body, "text/html; charset=" +
+			MimeUtility.quote("UTF-8", HeaderTokenizer.MIME));
 		multipart.addBodyPart(messageBodyPart);
 		
 //		for(int i = 0 ; i < attachtments.size() ; i++) {

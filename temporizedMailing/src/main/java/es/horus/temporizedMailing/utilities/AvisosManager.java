@@ -20,7 +20,7 @@ public class AvisosManager extends TimerTask {
 		for(AvisoBE aviso:listaAvisos) {
 			System.out.println("Aver si tenemos que enviar: "+aviso);
 			for(ProgramacionBE p:aviso.getProgramaciones()) {
-				if(p.getEnviado()==ProgramacionBE.ESTADO_PENDIENTE && p.getFecha()<Utiles.getFechaHoy()) {
+				if(p.getEnviado()==ProgramacionBE.ESTADO_PENDIENTE && p.getFecha()<=Utiles.getFechaHoy()) {
 					if(enviarAviso(aviso)) {
 						p.setEnviado(ProgramacionBE.ESTADO_ENVIADO);
 						System.out.println("Enviado OK (marco como enviado): "+aviso);
